@@ -11,8 +11,13 @@ uvicorn main:app --reload
 """
 from fastapi import FastAPI
 
+from app.api.cart import cart
+
+
 app = FastAPI()
 
+# Include the rest of the routers
+app.include_router(cart)
 
 @app.get("/")
 def read_root():
