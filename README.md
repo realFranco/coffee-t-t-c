@@ -42,7 +42,7 @@ docker compose -f .docker/compose.yml down
 
 ## How to
 
-### How to manipulate the "cli" service
+### How to manipulate the cli service
 
 ```bash
 # You should require a new bash if the containers are running on live mode instead of detach.

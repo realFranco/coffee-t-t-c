@@ -16,4 +16,4 @@ RUN apk update --no-cache && \
 COPY app/requirements.txt app/requirements.txt
 RUN pip3 install --no-cache-dir -r app/requirements.txt
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
