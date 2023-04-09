@@ -8,7 +8,6 @@ from sqlalchemy.orm import relationship
 from app.orm.schemas.prods_in_cart import ProdsInCart
 
 
-
 class Category(str, enum.Enum):
     accessories = 'accessories'
     coffee = 'coffee'
