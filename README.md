@@ -14,7 +14,7 @@ Coffee Shop.
     - [Check if postgres service is live](#check-if-postgres-service-is-live)
 - [Tools used for this stack](#tools-used-for-this-stack)
 
-## Wake up the all the stack
+## Wake up all the stack
 
 ```bash
 git clone x
@@ -114,7 +114,8 @@ Some activities need to be done before fully release this project:
 - Apply a more concise MVC pattern in order to decouple logic from the endpoints;
 - Apply a small CI pipeline related with QA and static typing ("autopep8", "isort", "pydocstyle", "pylint", "radon");
 - Add a more readable documentation about the entire app;
-- Add a Postman collection in order to fully replicate the REST API in a more easier way.
+- Add a Postman collection in order to fully replicate the REST API in a more easier way;
+- Improve the error message at the "db" service.
 
 
 🇺🇾 | 🇻🇪
