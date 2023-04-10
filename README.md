@@ -106,5 +106,15 @@ docker version
  Experimental:      true
 ```
 
+## TODO:
 
-🇻🇪 | 🇺🇾
+Some activities need to be done before fully release this project:
+
+- Set unit testing along core logic flows;
+- Apply a more concise MVC pattern in order to decouple logic from the endpoints;
+- Apply a small CI pipeline related with QA and static typing ("autopep8", "isort", "pydocstyle", "pylint", "radon");
+- Add a more readable documentation about the entire app;
+- Add a Postman collection in order to fully replicate the REST API in a more easier way.
+
+
+🇺🇾 | 🇻🇪
