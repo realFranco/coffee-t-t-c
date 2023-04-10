@@ -9,6 +9,7 @@ from app.orm.schemas.cart import Cart
 class Promotion:
     COFFEE_THRESHOLD: int = 2
     EQUIPMENT_THRESHOLD: int = 3
+    EQUIPMENT_PROPORTION_DISCOUNT: float = 10
     ACCESSORIES_THRESHOLD: int = 70
 
     @staticmethod
@@ -34,14 +35,20 @@ class Promotion:
         return False
 
     @staticmethod
-    def is_discount_available(session: session, cart_id: int) -> bool:
+    def get_equipment_discount(session: session, cart_id: int) -> float:
+        """
+        Return the total discount on equipment.
+
+        If return `x`, means that the total price to be payed will be `total - x`.
+        """
         equipment = session.query(Product.price, ProdsInCart.quantity) \
             .join(ProdsInCart, Product.id == ProdsInCart.product_id) \
             .join(Cart, ProdsInCart.cart_id == Cart.id) \
             .filter(Cart.id==cart_id, Product.category==Category.equipment).all()
         
         if None != equipment:
-            if sum([ equip[0] * equip[1] for equip in equipment ]) >= Promotion.ACCESSORIES_THRESHOLD:
-                return True
+            total_equipment = sum([ equip[0] * equip[1] for equip in equipment ])
+            if total_equipment >= Promotion.ACCESSORIES_THRESHOLD:
+                return total_equipment * (Promotion.EQUIPMENT_PROPORTION_DISCOUNT / 100)
         
-        return False
+        return 0

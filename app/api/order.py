@@ -2,11 +2,11 @@
 Order router.
 """
 import traceback
+import random
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm.session import SessionTransaction
 from starlette.responses import JSONResponse
-from sqlalchemy import func
 
 from app.config.constants import Tags, Msg
 from app.config.routes import Routes
@@ -14,8 +14,10 @@ from app.orm.db_connection import session
 from app.orm.schemas.cart import Cart
 from app.orm.schemas.product import Product, Category
 from app.orm.schemas.prods_in_cart import ProdsInCart
+from app.orm.schemas.order import Order
 from app.api.integration.promotion import Promotion
 from app.models.product import ProductToCartModel
+from app.config.constants import Constants
 
 
 order = APIRouter(
@@ -35,7 +37,12 @@ async def create_an_order(cartId: int, session: SessionTransaction = Depends(ses
                 content={'error': f'Cart "{id}" do not exist.'}
             )
 
-        # @todo: If `cartId` it is currently related with an `Order` row, return 400 & a message.
+        order = session.query(Order).filter(Order.cart_id == cartId).first()
+        if None != order:
+            return JSONResponse(
+                status_code=400, 
+                content={'error': f'An Order it is currently related with the Cart "{cartId}".'}
+            )
 
         if True == Promotion.is_extra_coffee_available(session, cartId):
             coffee = session.query(ProdsInCart.product_id, ProdsInCart.quantity) \
@@ -48,16 +55,39 @@ async def create_an_order(cartId: int, session: SessionTransaction = Depends(ses
                 .filter(ProdsInCart.cart_id==cartId, ProdsInCart.product_id==coffee[0])\
                 .update({'quantity': coffee[1] + 1})
 
-        # @todo: Continue with the promotions.
-        # Promotion.is_free_shipping_available(session, cartId)
-        # Promotion.is_discount_available(session, cartId)
+        new_order = Order(id=random.randint(1, Constants.MAX_RAND_INT), cart_id=cartId)
 
-        # @todo: Enable the `commit` statement after completes the endpoint.
-        # session.commit()
+        # Calculate the price to be payed based on the Products selected.
+        products_price_to_checkout = session.query(Product.price, ProdsInCart.quantity) \
+            .join(ProdsInCart, Product.id == ProdsInCart.product_id) \
+            .join(Cart, ProdsInCart.cart_id == Cart.id) \
+            .filter(Cart.id==cartId).all()        
+        new_order.ttl_products = sum([ prods[0] * prods[1] for prods in products_price_to_checkout ])
 
-        return {
-            'coffee': True
-        }
+        if True == Promotion.is_free_shipping_available(session, cartId):
+            new_order.ttl_shipping = 0
+
+        new_order.ttl_discounts = Promotion.get_equipment_discount(session, cartId)
+
+        # Ensure that the float digits be expressed in a readable way.
+        if False == new_order.format():
+            return JSONResponse(
+                status_code=400, 
+                content={'error': f'An error happens while format the Cart object.'}
+            )
+
+        # The `order` property will expose the money to be payed by the user and it is populated on-the-fly.
+        order_model = new_order.to_model()
+        if None == order_model:
+            return JSONResponse(
+                status_code=400, 
+                content={'error': f'An error happens while generate the Order model object.'}
+            )
+
+        session.add(new_order)
+        session.commit()
+
+        return order_model
     
     except Exception as err:
         traceback.print_exc()

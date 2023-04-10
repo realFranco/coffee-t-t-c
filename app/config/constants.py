@@ -11,4 +11,6 @@ class Msg:
 
 
 class Constants:
-    MAX_RAND_INT = 1000000
+    MAX_RAND_INT: int = 1000000
+    DEFAULT_SHIPPING_PRICE: int = 7
+    FLOAT_FORMAT: str = '%.4f'
