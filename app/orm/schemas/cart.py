@@ -1,7 +1,5 @@
 import traceback
 import random
-from typing import List
-
 
 from sqlalchemy import Column, Integer, ForeignKey
 from sqlalchemy.orm import relationship

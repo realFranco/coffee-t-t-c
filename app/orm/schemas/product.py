@@ -22,9 +22,3 @@ class Product(Base):
     category = Column(String, nullable=True)
 
     carts = relationship('Cart', secondary="prods_in_cart", back_populates='products')
-
-    def parse(self, product: ProductModel) -> bool:
-        try:
-            return True
-        except Exception as error:
-            return False

@@ -17,7 +17,7 @@ from app.api.order import order
 
 app = FastAPI()
 
-# Include the rest of the routers
+# Include the rest of the routers.
 app.include_router(cart)
 app.include_router(order)
 
