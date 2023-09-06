@@ -16,6 +16,7 @@ from app.orm.schemas.cart import Cart
 from app.orm.schemas.user import User
 from app.orm.schemas.prods_in_cart import ProdsInCart
 from app.models.product import ProductToCartModel
+from app.controller.cart import Cart as CartController
 
 
 cart = APIRouter(
@@ -28,21 +29,12 @@ cart = APIRouter(
 async def get_cart(id: int, session: SessionTransaction = Depends(session)):
     """Get a Cart by id."""
     try:
-        cart = session.query(Cart).filter(Cart.id == id).first()
-        if None == cart:
-            return JSONResponse(
-                status_code=404, 
-                content={'error': f'Cart "{id}" do not exist.'}
-            )
+        prods_in_cart = CartController.get_cart_by_id(id=id, session=session)
 
-        prods_in_cart = session.query(ProdsInCart)\
-            .filter(ProdsInCart.cart_id == id)\
-            .all()
+        # TODO: Create a new endpoint to return products with quantity.
+        # Info: Why the products with quantity are required?
 
-        return {
-            'cart': cart,
-            'productWithQuantity': {_.product_id: _.quantity for _ in prods_in_cart}
-        }
+        return prods_in_cart
                 
     except Exception as err:
         traceback.print_exc()
