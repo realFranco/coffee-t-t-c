@@ -3,9 +3,11 @@ FROM alpine:3.17.2
 VOLUME app
 WORKDIR app
 
+# python3=3.10.11-r0 \
+
 RUN apk update --no-cache && \
     apk add \
-        python3=3.10.11-r0 \
+        python3 \
         python3-dev \
         py3-pip \
         gcc \

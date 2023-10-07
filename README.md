@@ -4,9 +4,12 @@
 
 Coffee Shop.
 
+The current application has hot reload, every time you save the application the backend service is reloaded.
+
 ## Index
 
 - [Wake up the all the stack](#wake-up-the-all-the-stack)
+- [Endpoints](#endpoints)
 - [How to](#how-to)
     - [How to manipulate the "cli" service](#how-to-manipulate-the-cli-service)
 - [Checking services](#checking-services)
@@ -17,7 +20,7 @@ Coffee Shop.
 ## Wake up all the stack
 
 ```bash
-git clone x
+git clone <repo_url>
 
 # Copy and fill up the environment variables.
 cp .docker/.env.dist .docker/.env
@@ -39,6 +42,10 @@ docker exec -it <container name> [ /bin/bash | bash | sh ]
 # Turn off the all the services, make sure to run this to release the resources provisioned into the host.
 docker compose -f .docker/compose.yml down
 ```
+
+## Endpoints
+
+- http://127.0.0.1:8004/docs to see the documentation
 
 ## How to
 
@@ -70,7 +77,7 @@ wget --spider --server-response ${ENDPOINT} 2>&1 | grep 'HTTP/1.1 200 OK'
 curl ${ENDPOINT}
 
 # Got the object defined by the endpoint.
-> {"Hello":"World"}
+> {"info":"Coffee Shop from an e-commerce platform."}
 ```
 
 ### Check if postgres service is live
@@ -112,7 +119,7 @@ Some activities need to be done before fully release this project:
 
 - Set unit testing along core logic flows;
 - Apply a more concise MVC pattern in order to decouple logic from the endpoints;
-- Apply a small CI pipeline related with QA and static typing ("autopep8", "isort", "pydocstyle", "pylint", "radon");
+- Apply a small CI pipeline related with nightly build, QA and static typing ("autopep8", "isort", "pydocstyle", "pylint", "radon");
 - Add a more readable documentation about the entire app;
 - Add a Postman collection in order to fully replicate the REST API in a more easier way;
 - Improve the error message at the "db" service.
