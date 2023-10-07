@@ -1,7 +1,8 @@
 from sqlalchemy.orm.session import SessionTransaction
 from starlette.responses import JSONResponse
 
-from app.orm.schemas.cart import Cart as CartSchema
+# from app.orm.schemas.cart import Cart as CartSchema
+from app.repository.Cart import Cart as CartRepository
 
 class Cart:
 
@@ -15,8 +16,7 @@ class Cart:
 
         :return The cart object specified.
         """
-        # TODO: This query must be move it into a repository layer in order to decouple the data infrastructure from the controller.
-        cart = session.query(CartSchema).filter(CartSchema.id == id).first()
+        cart = CartRepository.get_cart_by_id(id, session)
         if None == cart:
             return JSONResponse(
                 status_code=404, 
