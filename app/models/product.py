@@ -9,6 +9,7 @@ class ProductModel(BaseModel):
 
 
 class ProductToCartModel(BaseModel):
+    """Product to Cart means the relation between both entities."""
     product_id: int
     quantity: int = 0
     

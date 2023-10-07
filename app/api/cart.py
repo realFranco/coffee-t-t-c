@@ -2,7 +2,7 @@
 Cart router.
 """
 import traceback
-from typing import List
+from typing import Dict, List
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm.session import SessionTransaction
@@ -11,12 +11,11 @@ from starlette.responses import JSONResponse
 from app.config.constants import Tags, Msg
 from app.config.routes import Routes
 from app.orm.db_connection import session
-from app.orm.schemas.product import Product
 from app.orm.schemas.cart import Cart
-from app.orm.schemas.user import User
 from app.orm.schemas.prods_in_cart import ProdsInCart
 from app.models.product import ProductToCartModel
-from app.controller.cart import Cart as CartController
+from app.controller.Cart import Cart as CartController
+from app.controller.User import User as UserController
 
 
 cart = APIRouter(
@@ -31,8 +30,8 @@ async def get_cart(id: int, session: SessionTransaction = Depends(session)):
     try:
         prods_in_cart = CartController.get_cart_by_id(id=id, session=session)
 
-        # TODO: Create a new endpoint to return products with quantity.
-        # Info: Why the products with quantity are required?
+        # @todo: Create a new endpoint to return products with quantity.
+        # @info: Why the products with quantity are required?
 
         return prods_in_cart
                 
@@ -42,13 +41,13 @@ async def get_cart(id: int, session: SessionTransaction = Depends(session)):
 
         return JSONResponse(status_code=400, content={'error': str(err)})
 
+
 @cart.post('/', tags=[Tags.cart])
 async def create_cart(userId: int,
-        session: SessionTransaction = Depends(session)):
+                      session: SessionTransaction = Depends(session)):
     """Create a Cart."""
     try:
-        # Verify that the User exist before create a Cart row.
-        if [] == session.query(User).filter(User.id == userId).first():
+        if None == UserController.get_user_by_id(id=userId, session=session):
             return JSONResponse(
                 status_code=404, 
                 content={'error': f'User "{userId}" do not exist.'}
@@ -68,36 +67,40 @@ async def create_cart(userId: int,
 
         return JSONResponse(status_code=400, content={'error': str(err)})
 
+
 @cart.post('/{cartId}/products', tags=[Tags.cart])
 async def add_products_to_cart(cartId: int,
                                 products: List[ProductToCartModel],
-                                session: SessionTransaction = Depends(session)):
-    """Add Products to Cart."""
+                                session: SessionTransaction = Depends(session)) -> Dict[str, int]:
+    """
+    Add Products to Cart.
+    
+    The products to be inserted will be verified before related with the final cart.
+
+    You could ony add the product once, if you want to edit the quantity of the product, 
+    use the update operation instead.
+    """
     try:
-        # Verify that the Cart exist before set Products.
-        if [] == session.query(Cart).filter(Cart.id == cartId).first():
+        if None == CartController.get_cart_by_id(id=cartId, session=session):
             return JSONResponse(
                 status_code=404, 
                 content={'error': f'Cart "{cartId}" do not exist.'}
             )
         
-        # Filter the products that exist into the database.
-        products_registered = session.query(Product.id)\
-            .filter(
-                Product.id.in_([ prod.product_id for prod in products ])
-            )\
-            .all()
-        products_registered = [_[0] for _ in products_registered] if products_registered else []
+        # Retrieve valid only products (already stored products).
+        products_registered = CartController\
+            .get_cart_by_product_ids(products=products, session=session)
         if [] == products_registered:
             return JSONResponse(
                 status_code=404, 
                 content={'error': f'Products to insert do not exist.'}
             )
+        products_registered = [_[0] for _ in products_registered] if products_registered else []
 
-        add_counter = 0
+        add_counter: int = 0
         for prod in products:
             if prod.product_id in products_registered:
-                # Check if the combination Product | Cart not exist before execute an insert.
+                # Verify if the combination Product and Cart not exist before execute an insertion operation.
                 if None == session.query(ProdsInCart)\
                     .filter(ProdsInCart.product_id==prod.product_id, ProdsInCart.cart_id==cartId).first():
                     session.add(
@@ -106,6 +109,7 @@ async def add_products_to_cart(cartId: int,
                     add_counter += 1
         session.commit()
 
+        # @todo: Add a model or interface to define this data type.
         return {
             'productsRegistered': add_counter
         }
@@ -116,15 +120,15 @@ async def add_products_to_cart(cartId: int,
         print(f'At adding Products to Cart: {str(err)}')
 
         return JSONResponse(status_code=400, content={'error': str(err)})
-    
+
+
 @cart.put('/{cartId}/', tags=[Tags.cart])
 async def set_quantity_products_inside_a_cart(cartId: int, 
                                                 products: List[ProductToCartModel],
                                                 session: SessionTransaction = Depends(session)):
     """Modify the Product quantity inside a Cart."""
     try:
-        # Verify that the Cart exist before set Products.
-        if [] == session.query(Cart).filter(Cart.id == cartId).first():
+        if None == CartController.get_cart_by_id(id=cartId, session=session):
             return JSONResponse(
                 status_code=404, 
                 content={'error': f'Cart "{cartId}" do not exist.'}
